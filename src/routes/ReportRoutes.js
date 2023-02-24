@@ -15,8 +15,4 @@ export default function (app) {
     "/assignedReportsByPoliceMan/:policemanId",
     ReportController.getAssignedReportsByPoliceMan
   );
-  app.get(
-    "/jsonValidator",
-    ReportController.jsonValidator
-  );
 }
