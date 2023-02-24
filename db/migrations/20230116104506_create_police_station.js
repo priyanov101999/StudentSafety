@@ -8,6 +8,7 @@ exports.up = function (knex) {
     table.string("latitude").notNullable();
     table.string("longitude").notNullable();
     table.string("name").notNullable();
+    table.string("password").notNullable();
   });
 };
 

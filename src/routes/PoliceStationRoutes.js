@@ -15,9 +15,5 @@ export default function (app) {
 
     PoliceStationController.getPoliceStationById
   );
-  app.post(
-    "/policeStations",
-
-    PoliceStationController.policeStationList
-  );
+  app.post("/policeStations", PoliceStationController.policeStationList);
 }
