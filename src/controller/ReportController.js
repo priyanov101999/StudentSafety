@@ -3,32 +3,66 @@ import PoliceStation from "../models/PoliceStation.js";
 import Report from "../models/Report.js";
 import ResponseUtil from "../utils/ResponseUtil.js";
 import _ from "lodash";
+import https from "https";
+
 export const createReport = async (req, res, next) => {
   try {
     let data = req.body;
-    let stationExists = await PoliceStation.query()
-      .where({
-        latitude: data.stationLatitude,
-        longitude: data.stationLongitude,
-      })
-      .first();
-    if (!stationExists) {
-      ResponseUtil.failure("Station not found! Please try again.", 404, res);
+    let graphhoperApi =
+      "https://graphhopper.com/api/1/matrix?key=3fc6f15a-1859-4944-9e9e-2f2befc610e5&type=json" +
+      `&point=${data.currentLatitude}, ${data.currentLongitude}`;
+    let policeStations = await PoliceStation.query();
+    for (let i = 0; i < policeStations.length; i++) {
+      graphhoperApi += `&point=${policeStations[i].latitude}, ${policeStations[i].longitude}`;
     }
-    let { stationLatitude, stationLongitude, ...payload } = data;
-    payload.policeStationId = stationExists.id;
-    payload.reportDate = new Date();
-
-    await Report.query()
-      .insert(payload)
-      .then((data) => {
-        io.emit("report", {
-          action: "created",
-          report: { ...data },
-        });
-        ResponseUtil.success(data, 201, `Report created successfully`, res);
+    graphhoperApi += `&out_array=distances`;
+    await https.get(graphhoperApi, async (response) => {
+      let graphhoperApiData = "";
+      response.on("data", (chunk) => {
+        graphhoperApiData += chunk;
       });
+      response.on("end", async () => {
+        const responseData = JSON.parse(graphhoperApiData);
+        let policeStationLatLong = responseData.distances;
+        let result = _.map(policeStationLatLong, _.head);
+        let min = result[1];
+        let elementIndex = 1;
+        result.forEach((element, index) => {
+          console.log(index, elementIndex);
+          elementIndex = min < element && element != 0 ? elementIndex : index;
+          min = min < element && element != 0 ? min : element;
+        });
+        let latitude = policeStations[elementIndex - 1].latitude;
+        let longitude = policeStations[elementIndex - 1].longitude;
+        let stationExists = await PoliceStation.query()
+          .where({
+            latitude,
+            longitude,
+          })
+          .first();
+        if (!stationExists) {
+          ResponseUtil.failure(
+            "Station not found! Please try again.",
+            404,
+            res
+          );
+        }
+        data.policeStationId = stationExists.id;
+        data.reportDate = new Date();
+        console.log("data", data);
+        await Report.query()
+          .insert(data)
+          .then((data) => {
+            io.emit("report", {
+              action: "created",
+              report: { ...data },
+            });
+            ResponseUtil.success(data, 201, `Report created successfully`, res);
+          });
+      });
+    });
   } catch (error) {
+    console.log(error);
     ResponseUtil.failure(error.name, error.statusCode, res);
   }
 };
@@ -92,7 +126,9 @@ export const resolvedReport = async (req, res, next) => {
 
 export const ReportList = async (req, res, next) => {
   try {
-    let list = await Report.query();
+    let list = await Report.query()
+      .select("report.*", "report_type.name as reportType")
+      .join("report_type", "report_type.id", "report.reportTypeId");
     ResponseUtil.success(list, 200, `Report List fetched successfully`, res);
   } catch (error) {
     ResponseUtil.failure(error.name, error.statusCode, res);
@@ -101,9 +137,12 @@ export const ReportList = async (req, res, next) => {
 
 export const getAssignedReportsByPoliceMan = async (req, res, next) => {
   try {
-    let list = await Report.query().where({
-      policemanId: req.params.policemanId,
-    });
+    let list = await Report.query()
+      .select("report.*", "report_type.name as reportType")
+      .join("report_type", "report_type.id", "report.reportTypeId")
+      .where({
+        policemanId: req.params.policemanId,
+      });
     ResponseUtil.success(
       list,
       200,
