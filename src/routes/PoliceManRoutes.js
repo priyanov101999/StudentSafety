@@ -15,7 +15,7 @@ export default function (app) {
 
     PoliceManController.getPolicemanById
   );
-  app.get(
+  app.post(
     "/policemanList",
 
     PoliceManController.policemanList
