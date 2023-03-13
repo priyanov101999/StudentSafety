@@ -1,5 +1,6 @@
 import PoliceMan from "../models/PoliceMan.js";
 import ResponseUtil from "../utils/ResponseUtil.js";
+import knex from "../knex.js";
 
 export const createPoliceman = async (req, res, next) => {
   try {
@@ -55,7 +56,17 @@ export const getPolicemanById = async (req, res, next) => {
 
 export const policemanList = async (req, res, next) => {
   try {
-    let list = await PoliceMan.query();
+    let { pagination, search, sorting } = req.body;
+    let list = await PoliceMan.query()
+      .select("policeman.*")
+      .orderBy(sorting)
+      .having(
+        knex.raw(
+          `concat_ws(' ', ${search.fields.toString()}) LIKE '%${search.value}%'`
+        )
+      )
+      .limit(pagination.limit)
+      .offset(pagination.offset);
 
     ResponseUtil.success(
       list,

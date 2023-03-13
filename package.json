@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon -r esm app.js",
+    "start": "npm run run_migration && nodemon -r esm app.js",
     "create_migration": "knex migrate:make",
     "run_migration": "knex migrate:latest",
     "rollback_migration": "knex migrate:rollback",
