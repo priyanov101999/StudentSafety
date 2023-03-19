@@ -1,5 +1,7 @@
+import { Model } from "objection";
 import { TYPES } from "../constants/Constants";
 import BaseModel from "./BaseModel";
+import ReportType from "./ReportType";
 
 export default class Report extends BaseModel {
   static get tableName() {
@@ -21,6 +23,16 @@ export default class Report extends BaseModel {
   }
 
   static get relationMappings() {
-    return {};
+    return {
+      reportType: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: ReportType,
+        filter: (query) => query.select("id", "name"),
+        join: {
+          from: `${this.tableName}.reportTypeId`,
+          to: `${ReportType.tableName}.id`,
+        },
+      },
+    };
   }
 }

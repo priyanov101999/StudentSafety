@@ -4,6 +4,7 @@ import Report from "../models/Report.js";
 import ResponseUtil from "../utils/ResponseUtil.js";
 import _ from "lodash";
 import https from "https";
+import ReportType from "../models/ReportType.js";
 
 export const createReport = async (req, res, next) => {
   try {
@@ -15,6 +16,7 @@ export const createReport = async (req, res, next) => {
     for (let i = 0; i < policeStations.length; i++) {
       graphhoperApi += `&point=${policeStations[i].latitude}, ${policeStations[i].longitude}`;
     }
+    let reportType = await ReportType.query().findById(req.body.reportTypeId);
     graphhoperApi += `&out_array=distances`;
     await https.get(graphhoperApi, async (response) => {
       let graphhoperApiData = "";
@@ -53,9 +55,10 @@ export const createReport = async (req, res, next) => {
         await Report.query()
           .insert(data)
           .then((data) => {
+            console.log({ ...data, reportType: reportType.name });
             io.emit("report", {
               action: "created",
-              report: { ...data },
+              report: { ...data, reportType: reportType.name },
             });
             ResponseUtil.success(data, 201, `Report created successfully`, res);
           });
@@ -71,29 +74,36 @@ export const assignReportToPoliceman = async (req, res, next) => {
   try {
     let id = req.params.id;
     let policemanId = req.body.policemanId;
-    let report = await Report.query().findById(id);
-
+    let report = await Report.query()
+      .findById(id)
+      .select("report.*", "report_type.name as reportType")
+      .join("report_type", "report_type.id", "report.reportTypeId");
     if (!report) {
       ResponseUtil.failure("Report not found", 404, res);
     } else {
+      report.policemanId = policemanId;
       await Report.query()
         .update({
           ...report,
-          policemanId,
-          id,
+          id: id,
         })
         .where({ id })
-        .then((data) => {
-          // io.emit("report", {
-          //   action: "assignedReport",
-          //   policemanId,
-          // });
-          io.sockets.in(policemanId).emit("report", {
+        .then(async (data) => {
+          console.log("Inserted successfully", report.reportTypeId);
+          io.emit("assignedReport", {
             action: "assignedReport",
-            policemanId,
+            report: {
+              ...report,
+              policemanId,
+              id,
+            },
           });
           return ResponseUtil.success(
-            data,
+            {
+              ...report,
+              policemanId,
+              id,
+            },
             200,
             `Report updated successfully`,
             res
@@ -115,6 +125,7 @@ export const resolvedReport = async (req, res, next) => {
       report.isResolved = true;
       await Report.query()
         .upsertGraphAndFetch({ ...report, id })
+        .withGraphFetched("reportType")
         .then((data) =>
           ResponseUtil.success(data, 200, `Report updated successfully`, res)
         );
@@ -127,8 +138,13 @@ export const resolvedReport = async (req, res, next) => {
 export const ReportList = async (req, res, next) => {
   try {
     let list = await Report.query()
-      .select("report.*", "report_type.name as reportType")
-      .join("report_type", "report_type.id", "report.reportTypeId");
+      .select(
+        "report.*",
+        "report_type.name as reportType",
+        "policeman.name as policeman"
+      )
+      .join("report_type", "report_type.id", "report.reportTypeId")
+      .leftJoin("policeman", "policeman.id", "report.policemanId");
     ResponseUtil.success(list, 200, `Report List fetched successfully`, res);
   } catch (error) {
     ResponseUtil.failure(error.name, error.statusCode, res);
