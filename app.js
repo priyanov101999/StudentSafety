@@ -4,12 +4,13 @@ import bodyParser from "body-parser";
 import http from "http";
 import cors from "cors";
 import { default as routes } from "./src/routes/Routes";
-
+const expressValidator = require("express-validator");
 // Create express and http servers
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
+app.use(expressValidator());
 const server = http.createServer(app);
 const socketUtils = require("./src/utils/socketUtils");
 export const io = socketUtils.sio(server);
