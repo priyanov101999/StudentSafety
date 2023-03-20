@@ -49,18 +49,24 @@ export default class Service {
           }
           data.policeStationId = stationExists.id;
           data.reportDate = new Date();
-          console.log("data", data);
           await Report.query()
             .insert(data)
             .then((data) => {
+              console.log({
+                ...data,
+                policemanId: null,
+                policeman: null,
+                reportType: reportType.name,
+                policeStation: stationExists.name,
+              });
               io.emit("report", {
                 action: "created",
                 report: {
                   ...data,
-                  policemanId: null,
-                  policeman: null,
                   reportType: reportType.name,
                   policeStation: stationExists.name,
+                  policemanId: "",
+                  policeman: "",
                 },
               });
             });
@@ -117,7 +123,7 @@ export default class Service {
           console.log({
             ...report,
             policemanId,
-            policeman: policeman,
+            policeman: policeman.name,
             policeStation: policestation.name,
             id,
           });
