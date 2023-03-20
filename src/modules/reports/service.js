@@ -5,6 +5,7 @@ import Report from "../../models/Report";
 import _ from "lodash";
 import { io } from "../../../app.js";
 import ReportType from "../../models/ReportType";
+import PoliceMan from "../../models/PoliceMan";
 export default class Service {
   static createReport = async (data) => {
     try {
@@ -78,33 +79,46 @@ export default class Service {
         .findById(id)
         .select("report.*", "report_type.name as reportType")
         .join("report_type", "report_type.id", "report.reportTypeId");
+      let policeman = await PoliceMan.query().findById(policemanId);
       if (!report) {
         return {
           error: true,
           errorText: "Report not found",
         };
-      } else {
-        report.policemanId = policemanId;
-        await Report.query()
-          .update({
-            ...report,
-            id: id,
-          })
-          .where({ id })
-          .then(async (data) => {
-            io.emit("assignedReport", {
-              action: "assignedReport",
-              report: {
-                ...report,
-                policemanId,
-                id,
-              },
-            });
-          });
+      }
+      if (!policeman) {
         return {
-          message: `Report updated successfully`,
+          error: true,
+          errorText: "Policeman not found",
         };
       }
+      report.policemanId = policemanId;
+      await Report.query()
+        .update({
+          ...report,
+          id: id,
+        })
+        .where({ id })
+        .then(async (data) => {
+          console.log({
+            ...report,
+            policemanId,
+            policeman: policeman.name,
+            id,
+          });
+          io.emit("assignedReport", {
+            action: "assignedReport",
+            report: {
+              ...report,
+              policemanId,
+              policeman: policeman,
+              id,
+            },
+          });
+        });
+      return {
+        message: `Report updated successfully`,
+      };
     } catch (error) {
       return {
         error: true,
@@ -129,6 +143,30 @@ export default class Service {
 
       return {
         message: `Report resolved successfully`,
+      };
+    } catch (error) {
+      return {
+        error: true,
+        errorText: error,
+      };
+    }
+  };
+  static assignReportToOtherPoliceStation = async (id) => {
+    try {
+      let report = await Report.query().findById(id);
+      if (!report) {
+        return {
+          error: true,
+          errorText: "Report not found",
+        };
+      }
+      report.isResolved = true;
+      await Report.query()
+        .upsertGraphAndFetch({ ...report, id })
+        .withGraphFetched("reportType");
+
+      return {
+        message: `Report assigned to different police station successfully`,
       };
     } catch (error) {
       return {

@@ -28,6 +28,15 @@ export const resolvedReport = async (handler) => {
     return handler.sendServerError(err);
   }
 };
+export const assignReportToOtherPoliceStation = async (handler) => {
+  try {
+    const id = await handler.getRequestParameterAsString("id");
+    const res = await Service.assignReportToOtherPoliceStation(id);
+    return handler.handleResponse(res);
+  } catch (err) {
+    return handler.sendServerError(err);
+  }
+};
 
 export const reportList = async (handler) => {
   try {

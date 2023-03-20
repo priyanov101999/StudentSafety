@@ -15,6 +15,11 @@ export default function (app) {
     validator,
     handle(ReportController.resolvedReport)
   );
+  app.put(
+    "/assignReportToOtherPoliceStation/:id",
+    validator,
+    handle(ReportController.assignReportToOtherPoliceStation)
+  );
   app.get(
     "/reports",
 
