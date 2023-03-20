@@ -57,6 +57,8 @@ export default class Service {
                 action: "created",
                 report: {
                   ...data,
+                  policemanId: null,
+                  policeman: null,
                   reportType: reportType.name,
                   policeStation: stationExists.name,
                 },
@@ -83,10 +85,19 @@ export default class Service {
         .select("report.*", "report_type.name as reportType")
         .join("report_type", "report_type.id", "report.reportTypeId");
       let policeman = await PoliceMan.query().findById(policemanId);
+      let policestation = await PoliceStation.query().findById(
+        report.policeStationId
+      );
       if (!report) {
         return {
           error: true,
           errorText: "Report not found",
+        };
+      }
+      if (!policestation) {
+        return {
+          error: true,
+          errorText: "Police station not found",
         };
       }
       if (!policeman) {
@@ -106,7 +117,8 @@ export default class Service {
           console.log({
             ...report,
             policemanId,
-            policeman: policeman.name,
+            policeman: policeman,
+            policeStation: policestation.name,
             id,
           });
           io.emit("assignedReport", {
@@ -114,7 +126,8 @@ export default class Service {
             report: {
               ...report,
               policemanId,
-              policeman: policeman,
+              policeman: policeman.name,
+              policeStation: policestation.name,
               id,
             },
           });
