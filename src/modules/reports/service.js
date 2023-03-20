@@ -53,10 +53,13 @@ export default class Service {
           await Report.query()
             .insert(data)
             .then((data) => {
-              console.log({ ...data, reportType: reportType.name });
               io.emit("report", {
                 action: "created",
-                report: { ...data, reportType: reportType.name },
+                report: {
+                  ...data,
+                  reportType: reportType.name,
+                  policeStation: stationExists.name,
+                },
               });
             });
         });
