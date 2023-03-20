@@ -188,10 +188,12 @@ export default class Service {
         .select(
           "report.*",
           "report_type.name as reportType",
-          "policeman.name as policeman"
+          "policeman.name as policeman",
+          "police_station.name as policeStation"
         )
         .join("report_type", "report_type.id", "report.reportTypeId")
-        .leftJoin("policeman", "policeman.id", "report.policemanId");
+        .leftJoin("policeman", "policeman.id", "report.policemanId")
+        .join("police_station", "police_station.id", "report.policeStationId");
       return list;
     } catch (error) {
       return {
