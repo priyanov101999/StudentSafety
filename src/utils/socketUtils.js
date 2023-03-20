@@ -1,5 +1,4 @@
 import socketIO from "socket.io";
-import * as ReportController from "./../controller/ReportController.js";
 exports.sio = (server) => {
   return socketIO(server, {
     transports: ["polling"],
