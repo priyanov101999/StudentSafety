@@ -25,4 +25,10 @@ export default function (app) {
     validator,
     handle(PoliceManController.policemanList)
   );
+  app.get(
+    "/policemanListByStationId/:stationId",
+
+    validator,
+    handle(PoliceManController.policemanListByStationId)
+  );
 }

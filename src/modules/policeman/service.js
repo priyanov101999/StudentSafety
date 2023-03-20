@@ -79,4 +79,17 @@ export default class Service {
       };
     }
   };
+
+  static policemanListByStationId = async (policeStationId) => {
+    try {
+      let list = await PoliceMan.query().where({ policeStationId });
+
+      return list;
+    } catch (error) {
+      return {
+        error: true,
+        errorText: error,
+      };
+    }
+  };
 }

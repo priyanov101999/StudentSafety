@@ -39,3 +39,13 @@ export const policemanList = async (handler) => {
     return handler.sendServerError(err);
   }
 };
+
+export const policemanListByStationId = async (handler) => {
+  try {
+    const stationId = await handler.getRequestParameterAsString("stationId");
+    const res = await Service.policemanListByStationId(stationId);
+    return handler.handleResponse(res);
+  } catch (err) {
+    return handler.sendServerError(err);
+  }
+};
