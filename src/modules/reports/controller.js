@@ -30,8 +30,12 @@ export const resolvedReport = async (handler) => {
 };
 export const assignReportToOtherPoliceStation = async (handler) => {
   try {
-    const id = await handler.getRequestParameterAsString("id");
-    const res = await Service.assignReportToOtherPoliceStation(id);
+    console.log("controller");
+    const id = await handler.getRequestParameterAsString(
+      "id"
+    );
+    const data = await handler.getBody();
+    const res = await Service.assignReportToOtherPoliceStation(data,id);
     return handler.handleResponse(res);
   } catch (err) {
     return handler.sendServerError(err);

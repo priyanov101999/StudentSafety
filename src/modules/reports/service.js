@@ -151,8 +151,9 @@ export default class Service {
       };
     }
   };
-  static assignReportToOtherPoliceStation = async (id) => {
+  static assignReportToOtherPoliceStation = async (data, id) => {
     try {
+      console.log("service");
       let report = await Report.query().findById(id);
       if (!report) {
         return {
@@ -160,11 +161,16 @@ export default class Service {
           errorText: "Report not found",
         };
       }
-      report.isResolved = true;
-      await Report.query()
+      report.policeStationId = data.policeStationId;
+      let result = await Report.query()
         .upsertGraphAndFetch({ ...report, id })
         .withGraphFetched("reportType");
-
+      result.reportType = result.reportType.name;
+      console.log(result);
+      io.emit("report", {
+        action: "created",
+        report: { ...result },
+      });
       return {
         message: `Report assigned to different police station successfully`,
       };

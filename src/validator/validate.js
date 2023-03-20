@@ -89,3 +89,10 @@ export const createReport = (request) => {
 export const assignReportToPoliceman = (request) => {
   request.assert("policemanId", `Poilce man is mandatory`).notEmpty().isUUID();
 };
+
+export const assignReportToOtherPoliceStation = (request) => {
+  request
+    .assert("policeStationId", `Poilce station is mandatory`)
+    .notEmpty()
+    .isUUID();
+};

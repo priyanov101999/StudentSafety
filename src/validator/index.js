@@ -24,6 +24,9 @@ export async function validator(request, response, next) {
       case "/assignReportToPoliceman/:id":
         await FieldValidator.assignReportToPoliceman(request);
         break;
+        case "/assignReportToOtherPoliceStation/:id":
+          await FieldValidator.assignReportToOtherPoliceStation(request);
+          break;
     }
   }
   const result = await request.getValidationResult();
