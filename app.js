@@ -16,7 +16,7 @@ const socketUtils = require("./src/utils/socketUtils");
 export const io = socketUtils.sio(server);
 socketUtils.connection(io);
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4001;
 initializeApplication();
 
 module.exports = app;
