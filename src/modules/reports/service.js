@@ -10,7 +10,7 @@ export default class Service {
   static createReport = async (data) => {
     try {
       let graphhoperApi =
-        "https://graphhopper.com/api/1/matrix?key=3fc6f15a-1859-4944-9e9e-2f2befc610e5&type=json" +
+        "https://graphhopper.com/api/1/matrix?key=498c1977-9179-45a3-9a1e-d7edc2a95dab&type=json" +
         `&point=${data.currentLatitude}, ${data.currentLongitude}`;
       let policeStations = await PoliceStation.query();
       for (let i = 0; i < policeStations.length; i++) {
@@ -33,8 +33,10 @@ export default class Service {
             elementIndex = min < element && element != 0 ? elementIndex : index;
             min = min < element && element != 0 ? min : element;
           });
+          console.log(result, elementIndex);
           let latitude = policeStations[elementIndex - 1].latitude;
           let longitude = policeStations[elementIndex - 1].longitude;
+          console.log(latitude, " ", longitude);
           let stationExists = await PoliceStation.query()
             .where({
               latitude,
