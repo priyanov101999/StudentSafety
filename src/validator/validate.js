@@ -96,3 +96,22 @@ export const assignReportToOtherPoliceStation = (request) => {
     .notEmpty()
     .isUUID();
 };
+export const login = (request) => {
+  if (!(request.body.mobileNo || request.body.name)) {
+    request
+      .assert(
+        "mobileNo",
+        `Mobile No or name is mandatory and should be a string`
+      )
+      .notEmpty()
+      .isString();
+    request
+      .assert("name", `Mobile No or name is mandatory and should be a string`)
+      .notEmpty()
+      .isString();
+  }
+  request
+    .assert("password", `Password is mandatory and should be a string`)
+    .notEmpty()
+    .isString();
+};

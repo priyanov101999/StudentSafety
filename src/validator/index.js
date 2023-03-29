@@ -12,6 +12,9 @@ export async function validator(request, response, next) {
       case "/report":
         await FieldValidator.createReport(request);
         break;
+      case "/login":
+        await FieldValidator.login(request);
+        break;
     }
   } else if (request.route.stack[0].method === "put") {
     switch (request.route.path) {
@@ -24,9 +27,9 @@ export async function validator(request, response, next) {
       case "/assignReportToPoliceman/:id":
         await FieldValidator.assignReportToPoliceman(request);
         break;
-        case "/assignReportToOtherPoliceStation/:id":
-          await FieldValidator.assignReportToOtherPoliceStation(request);
-          break;
+      case "/assignReportToOtherPoliceStation/:id":
+        await FieldValidator.assignReportToOtherPoliceStation(request);
+        break;
     }
   }
   const result = await request.getValidationResult();
