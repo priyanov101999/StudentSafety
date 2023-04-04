@@ -3,7 +3,7 @@ import BaseModel from "./BaseModel";
 
 export default class AdminUser extends BaseModel {
   static get tableName() {
-    return "admin_USER";
+    return "admin_user";
   }
 
   static get jsonSchema() {
