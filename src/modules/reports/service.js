@@ -14,6 +14,7 @@ export default class Service {
         `&point=${data.currentLatitude}, ${data.currentLongitude}`;
       let policeStations = await PoliceStation.query();
       for (let i = 0; i < policeStations.length; i++) {
+        console.log(policeStations[i].name);
         graphhoperApi += `&point=${policeStations[i].latitude}, ${policeStations[i].longitude}`;
       }
       let reportType = await ReportType.query().findById(data.reportTypeId);
@@ -27,15 +28,12 @@ export default class Service {
           const responseData = JSON.parse(graphhoperApiData);
           let policeStationLatLong = responseData.distances;
           let result = _.map(policeStationLatLong, _.head);
-          let min = result[1];
-          let elementIndex = 1;
-          result.forEach((element, index) => {
-            elementIndex = min < element && element != 0 ? elementIndex : index;
-            min = min < element && element != 0 ? min : element;
-          });
+          result.shift();
+          let min = Math.min(...result);
+          let elementIndex = result.indexOf(min);
           console.log(result, elementIndex);
-          let latitude = policeStations[elementIndex - 1].latitude;
-          let longitude = policeStations[elementIndex - 1].longitude;
+          let latitude = policeStations[elementIndex].latitude;
+          let longitude = policeStations[elementIndex].longitude;
           console.log(latitude, " ", longitude);
           let stationExists = await PoliceStation.query()
             .where({
@@ -51,6 +49,7 @@ export default class Service {
           }
           data.policeStationId = stationExists.id;
           data.reportDate = new Date();
+          console.log(data);
           await Report.query()
             .insert(data)
             .then((data) => {
