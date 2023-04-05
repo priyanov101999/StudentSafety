@@ -10,7 +10,7 @@ export default class Service {
   static createReport = async (data) => {
     try {
       let graphhoperApi =
-        "https://graphhopper.com/api/1/matrix?key=498c1977-9179-45a3-9a1e-d7edc2a95dab&type=json" +
+        "https://graphhopper.com/api/1/matrix?key=dfa9a677-b89e-4bf2-8932-acb5f792527a&type=json" +
         `&point=${data.currentLatitude}, ${data.currentLongitude}`;
       let policeStations = await PoliceStation.query();
       for (let i = 0; i < policeStations.length; i++) {
@@ -216,7 +216,8 @@ export default class Service {
         )
         .join("report_type", "report_type.id", "report.reportTypeId")
         .leftJoin("policeman", "policeman.id", "report.policemanId")
-        .join("police_station", "police_station.id", "report.policeStationId");
+        .join("police_station", "police_station.id", "report.policeStationId")
+        .orderBy("report.isResolved", "asc");
       return list;
     } catch (error) {
       return {
