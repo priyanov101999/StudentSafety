@@ -35,7 +35,7 @@ if (DB_HOST) {
 }
 
 const knex = Knex({
-  client: "mysql",
+  client: "mysql2",
   connection,
   pool: {
     min: parseInt(DB_POOL_MIN, 10),

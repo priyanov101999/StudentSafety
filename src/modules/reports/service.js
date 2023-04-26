@@ -6,6 +6,7 @@ import _ from "lodash";
 import { io } from "../../../app.js";
 import ReportType from "../../models/ReportType";
 import PoliceMan from "../../models/PoliceMan";
+import fetchTableList from "../../utils/listing-helper";
 export default class Service {
   static createReport = async (data) => {
     try {
@@ -153,17 +154,42 @@ export default class Service {
   static resolvedReport = async (id) => {
     try {
       let report = await Report.query().findById(id);
+      let policeman = await PoliceMan.query().findById(report.policemanId);
+      let policestation = await PoliceStation.query().findById(
+        report.policeStationId
+      );
       if (!report) {
         return {
           error: true,
           errorText: "Report not found",
         };
       }
+      if (!policestation) {
+        return {
+          error: true,
+          errorText: "Police station not found",
+        };
+      }
+      if (!policeman) {
+        return {
+          error: true,
+          errorText: "Policeman not found",
+        };
+      }
       report.isResolved = true;
       await Report.query()
         .upsertGraphAndFetch({ ...report, id })
         .withGraphFetched("reportType");
-
+      io.emit("assignedReport", {
+        action: "resolvedReport",
+        report: {
+          ...report,
+          policemanId: policeman.id,
+          policeman: policeman.name,
+          policeStation: policestation.name,
+          id,
+        },
+      });
       return {
         message: `Report resolved successfully`,
       };
@@ -205,9 +231,10 @@ export default class Service {
     }
   };
 
-  static reportList = async () => {
+  static reportList = async (data) => {
     try {
-      let list = await Report.query()
+      const query = Report.query().toKnexQuery().clearSelect();
+      query
         .select(
           "report.*",
           "report_type.name as reportType",
@@ -218,7 +245,14 @@ export default class Service {
         .leftJoin("policeman", "policeman.id", "report.policemanId")
         .join("police_station", "police_station.id", "report.policeStationId")
         .orderBy("report.isResolved", "asc");
-      return list;
+      //return query;
+      return fetchTableList({
+        baseQuery: query,
+        filters: data.filters,
+        pagination: data.pagination,
+        sorting: data.sorting,
+        search: data.search,
+      });
     } catch (error) {
       return {
         error: true,

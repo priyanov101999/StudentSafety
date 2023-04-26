@@ -16,7 +16,7 @@ const socketUtils = require("./src/utils/socketUtils");
 export const io = socketUtils.sio(server);
 socketUtils.connection(io);
 
-const PORT = process.env.PORT || 4001;
+const PORT = 4001;
 initializeApplication();
 
 module.exports = app;
@@ -24,7 +24,7 @@ module.exports = app;
 async function initializeApplication() {
   routes(app);
   server.listen(PORT, () => {
-    console.log("App Started!!");
+    console.log("App Started!!", PORT);
   });
   return;
 }

@@ -31,11 +31,9 @@ export const resolvedReport = async (handler) => {
 export const assignReportToOtherPoliceStation = async (handler) => {
   try {
     console.log("controller");
-    const id = await handler.getRequestParameterAsString(
-      "id"
-    );
+    const id = await handler.getRequestParameterAsString("id");
     const data = await handler.getBody();
-    const res = await Service.assignReportToOtherPoliceStation(data,id);
+    const res = await Service.assignReportToOtherPoliceStation(data, id);
     return handler.handleResponse(res);
   } catch (err) {
     return handler.sendServerError(err);
@@ -44,7 +42,8 @@ export const assignReportToOtherPoliceStation = async (handler) => {
 
 export const reportList = async (handler) => {
   try {
-    const res = await Service.reportList();
+    const data = await handler.getBody();
+    const res = await Service.reportList(data);
     return handler.handleResponse(res);
   } catch (err) {
     return handler.sendServerError(err);

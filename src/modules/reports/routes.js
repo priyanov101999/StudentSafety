@@ -20,7 +20,7 @@ export default function (app) {
     validator,
     handle(ReportController.assignReportToOtherPoliceStation)
   );
-  app.get(
+  app.post(
     "/reports",
 
     validator,
