@@ -29,20 +29,28 @@ export default class Service {
 
   static policemanLogin = async (data) => {
     try {
-      let loginDetails = await PoliceMan.query()
+      let loginDetails = await PoliceStation.query().findOne(data);
+      if (loginDetails) {
+        loginDetails.isPoliceStationAdmin = true;
+        return loginDetails;
+      }
+      loginDetails = await PoliceMan.query()
         .join(
           "police_station",
           "police_station.id",
           "policeman.policeStationId"
         )
         .select("policeman.*")
-        .findOne(data);
+        .where("policeman.mobileNo", "=", data.mobileNo)
+        .where("police_station.password", "=", data.password)
+        .first();
       if (!loginDetails) {
         return {
           error: true,
           errorText: "User not found",
         };
       } else {
+        loginDetails.isPoliceStationAdmin = false;
         return loginDetails;
       }
     } catch (error) {

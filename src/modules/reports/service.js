@@ -10,10 +10,12 @@ import fetchTableList from "../../utils/listing-helper";
 export default class Service {
   static createReport = async (data) => {
     try {
+      console.log(data);
       let graphhoperApi =
-        "https://graphhopper.com/api/1/matrix?key=dfa9a677-b89e-4bf2-8932-acb5f792527a&type=json" +
+        "https://graphhopper.com/api/1/matrix?key=b82a54e4-549a-4e1e-aa09-7b82bd922b2a&type=json" +
         `&point=${data.currentLatitude}, ${data.currentLongitude}`;
       let policeStations = await PoliceStation.query();
+      console.log("policeStations:", policeStations);
       for (let i = 0; i < policeStations.length; i++) {
         console.log(policeStations[i].name);
         graphhoperApi += `&point=${policeStations[i].latitude}, ${policeStations[i].longitude}`;
@@ -27,11 +29,13 @@ export default class Service {
         });
         response.on("end", async () => {
           const responseData = JSON.parse(graphhoperApiData);
+          console.log(responseData);
           let policeStationLatLong = responseData.distances;
           let result = _.map(policeStationLatLong, _.head);
           result.shift();
           let min = Math.min(...result);
-          let elementIndex = result.indexOf(min);
+          let elementIndex =
+            result.indexOf(min) == -1 ? 0 : result.indexOf(min);
           console.log(result, elementIndex);
           let latitude = policeStations[elementIndex].latitude;
           let longitude = policeStations[elementIndex].longitude;
@@ -54,7 +58,7 @@ export default class Service {
           await Report.query()
             .insert(data)
             .then((data) => {
-              console.log({
+              console.log("then:", {
                 ...data,
                 policemanId: null,
                 policeman: null,

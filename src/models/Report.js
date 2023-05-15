@@ -18,6 +18,7 @@ export default class Report extends BaseModel {
         stationLatitude: TYPES.STRING,
         stationLongitude: TYPES.STRING,
         reportTypeId: TYPES.ID,
+        description: TYPES.TEXT,
       },
     };
   }
