@@ -79,7 +79,7 @@ export default class Service {
         });
       });
       return {
-        message: "Report created successfully",
+        message: "Report has been created",
       };
     } catch (error) {
       return {
