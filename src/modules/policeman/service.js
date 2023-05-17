@@ -1,5 +1,6 @@
 import knex from "../../knex";
 import PoliceMan from "../../models/PoliceMan";
+import fetchTableList from "../../utils/listing-helper";
 export default class Service {
   static createPoliceman = async (data) => {
     try {
@@ -57,21 +58,15 @@ export default class Service {
 
   static policemanList = async (data) => {
     try {
-      let { pagination, search, sorting } = data;
-      let list = await PoliceMan.query()
-        .select("policeman.*")
-        .orderBy(sorting)
-        .having(
-          knex.raw(
-            `concat_ws(' ', ${search.fields.toString()}) LIKE '%${
-              search.value
-            }%'`
-          )
-        )
-        .limit(pagination.limit)
-        .offset(pagination.offset);
-
-      return list;
+      let query = PoliceMan.query().toKnexQuery().clearSelect();
+      query.select("policeman.*");
+      return fetchTableList({
+        baseQuery: query,
+        filters: data.filters,
+        pagination: data.pagination,
+        sorting: data.sorting,
+        search: data.search,
+      });
     } catch (error) {
       return {
         error: true,

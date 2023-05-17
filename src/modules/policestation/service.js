@@ -1,5 +1,6 @@
 import knex from "../../knex";
 import PoliceStation from "../../models/PoliceStation";
+import fetchTableList from "../../utils/listing-helper";
 export default class Service {
   static createPoliceStation = async (data) => {
     try {
@@ -57,9 +58,15 @@ export default class Service {
 
   static policeStationList = async (data) => {
     try {
-      let list = await PoliceStation.query();
-
-      return list;
+      let query = PoliceStation.query().toKnexQuery().clearSelect();
+      query.select("police_station.*");
+      return fetchTableList({
+        baseQuery: query,
+        filters: data.filters,
+        pagination: data.pagination,
+        sorting: data.sorting,
+        search: data.search,
+      });
     } catch (error) {
       return {
         error: true,
