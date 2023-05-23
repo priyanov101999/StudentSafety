@@ -36,10 +36,8 @@ export default class Service {
           let min = Math.min(...result);
           let elementIndex =
             result.indexOf(min) == -1 ? 0 : result.indexOf(min);
-          console.log(result, elementIndex);
           let latitude = policeStations[elementIndex].latitude;
           let longitude = policeStations[elementIndex].longitude;
-          console.log(latitude, " ", longitude);
           let stationExists = await PoliceStation.query()
             .where({
               latitude,
@@ -58,13 +56,6 @@ export default class Service {
           await Report.query()
             .insert(data)
             .then((data) => {
-              console.log("then:", {
-                ...data,
-                policemanId: null,
-                policeman: null,
-                reportType: reportType.name,
-                policeStation: stationExists.name,
-              });
               io.emit("report", {
                 action: "created",
                 report: {
@@ -275,6 +266,74 @@ export default class Service {
         });
 
       return list;
+    } catch (error) {
+      return {
+        error: true,
+        errorText: error,
+      };
+    }
+  };
+
+  static phoneNoOfNearestStation = async (data) => {
+    try {
+      var station;
+      let graphhoperApi =
+        "https://graphhopper.com/api/1/matrix?key=b82a54e4-549a-4e1e-aa09-7b82bd922b2a&type=json" +
+        `&point=${data.currentLatitude}, ${data.currentLongitude}`;
+      let policeStations = await PoliceStation.query();
+      console.log("policeStations:", policeStations);
+      for (let i = 0; i < policeStations.length; i++) {
+        console.log(policeStations[i].name);
+        graphhoperApi += `&point=${policeStations[i].latitude}, ${policeStations[i].longitude}`;
+      }
+      graphhoperApi += `&out_array=distances`;
+
+      const graphhoperApiData = await new Promise((resolve, reject) => {
+        https
+          .get(graphhoperApi, (response) => {
+            let data = "";
+            response.on("data", (chunk) => {
+              data += chunk;
+            });
+            response.on("end", () => {
+              resolve(data);
+            });
+          })
+          .on("error", (error) => {
+            reject(error);
+          });
+      });
+
+      const responseData = JSON.parse(graphhoperApiData);
+      let policeStationLatLong = responseData.distances;
+      let result = _.map(policeStationLatLong, _.head);
+      result.shift();
+      let min = Math.min(...result);
+      let elementIndex = result.indexOf(min) == -1 ? 0 : result.indexOf(min);
+      let latitude = policeStations[elementIndex].latitude;
+      let longitude = policeStations[elementIndex].longitude;
+      console.log(latitude, longitude);
+      let stationExists = await PoliceStation.query()
+        .where({
+          latitude,
+          longitude,
+        })
+        .first();
+
+      if (!stationExists) {
+        return {
+          error: true,
+          errorText: "Station not found! Please try again.",
+        };
+      }
+
+      station = stationExists;
+      console.log("station:", station);
+
+      return {
+        error: false,
+        values: station,
+      };
     } catch (error) {
       return {
         error: true,

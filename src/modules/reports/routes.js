@@ -32,4 +32,5 @@ export default function (app) {
     validator,
     handle(ReportController.assignedReportsByPoliceMan)
   );
+  app.post("/phoneNoOfNearestStation", validator, handle(ReportController.phoneNoOfNearestStation));
 }

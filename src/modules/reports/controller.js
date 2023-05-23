@@ -61,3 +61,14 @@ export const assignedReportsByPoliceMan = async (handler) => {
     return handler.sendServerError(err);
   }
 };
+
+export const phoneNoOfNearestStation = async (handler) => {
+  try {
+    const data = await handler.getBody();
+    const res = await Service.phoneNoOfNearestStation(data);
+    console.log("res:", res);
+    return handler.handleCreatedResponse(res);
+  } catch (err) {
+    return handler.sendServerError(err);
+  }
+};
