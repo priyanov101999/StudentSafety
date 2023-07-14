@@ -8,11 +8,13 @@ export default class Service {
       let loginDetails = await AdminUser.query().findOne(data);
       if (loginDetails) {
         loginDetails.isSuperAdmin = true;
+        loginDetails.isPoliceStationAdmin = false;
         return loginDetails;
       }
       loginDetails = await PoliceStation.query().findOne(data);
       if (loginDetails) {
         loginDetails.isPoliceStationAdmin = true;
+        loginDetails.isSuperAdmin = false;
         return loginDetails;
       }
       return {
