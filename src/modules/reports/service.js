@@ -10,18 +10,16 @@ import fetchTableList from "../../utils/listing-helper";
 export default class Service {
   static createReport = async (data) => {
     try {
-      console.log(data);
       let graphhoperApi =
-        "https://graphhopper.com/api/1/matrix?key=b82a54e4-549a-4e1e-aa09-7b82bd922b2a&type=json" +
-        `&point=${data.currentLatitude}, ${data.currentLongitude}`;
+        "https://maps.googleapis.com/maps/api/distancematrix/json?" +
+        `origins=${data.currentLatitude},${data.currentLongitude}&destinations=`;
       let policeStations = await PoliceStation.query();
-      console.log("policeStations:", policeStations);
       for (let i = 0; i < policeStations.length; i++) {
         console.log(policeStations[i].name);
-        graphhoperApi += `&point=${policeStations[i].latitude}, ${policeStations[i].longitude}`;
+        graphhoperApi += `${policeStations[i].latitude},${policeStations[i].longitude}|`;
       }
       let reportType = await ReportType.query().findById(data.reportTypeId);
-      graphhoperApi += `&out_array=distances`;
+      graphhoperApi += `&key=AIzaSyBtVz2yeWdiCJoxTQmynq5U5ZxUJr1qhHI`;
       await https.get(graphhoperApi, async (response) => {
         let graphhoperApiData = "";
         response.on("data", (chunk) => {
@@ -29,13 +27,23 @@ export default class Service {
         });
         response.on("end", async () => {
           const responseData = JSON.parse(graphhoperApiData);
-          console.log(responseData);
-          let policeStationLatLong = responseData.distances;
-          let result = _.map(policeStationLatLong, _.head);
-          result.shift();
-          let min = Math.min(...result);
+          console.log(graphhoperApi, responseData.rows[0]);
+          let policeStationLatLong = responseData.rows[0].elements.map(
+            (item) => {
+              if (item.distance) {
+                return item.distance.value;
+              } else {
+                return Infinity;
+              }
+            }
+          );
+
+          let min = Math.min(...policeStationLatLong);
           let elementIndex =
-            result.indexOf(min) == -1 ? 0 : result.indexOf(min);
+            policeStationLatLong.indexOf(min) == -1
+              ? 0
+              : policeStationLatLong.indexOf(min);
+          console.log(policeStationLatLong, elementIndex);
           let latitude = policeStations[elementIndex].latitude;
           let longitude = policeStations[elementIndex].longitude;
           let stationExists = await PoliceStation.query()
@@ -278,15 +286,13 @@ export default class Service {
     try {
       var station;
       let graphhoperApi =
-        "https://graphhopper.com/api/1/matrix?key=b82a54e4-549a-4e1e-aa09-7b82bd922b2a&type=json" +
-        `&point=${data.currentLatitude}, ${data.currentLongitude}`;
+        "https://maps.googleapis.com/maps/api/distancematrix/json?" +
+        `origins=${data.currentLatitude},${data.currentLongitude}&destinations=`;
       let policeStations = await PoliceStation.query();
-      console.log("policeStations:", policeStations);
       for (let i = 0; i < policeStations.length; i++) {
-        console.log(policeStations[i].name);
-        graphhoperApi += `&point=${policeStations[i].latitude}, ${policeStations[i].longitude}`;
+        graphhoperApi += `${policeStations[i].latitude},${policeStations[i].longitude}|`;
       }
-      graphhoperApi += `&out_array=distances`;
+      graphhoperApi += `&key=AIzaSyBtVz2yeWdiCJoxTQmynq5U5ZxUJr1qhHI`;
 
       const graphhoperApiData = await new Promise((resolve, reject) => {
         https
@@ -305,11 +311,20 @@ export default class Service {
       });
 
       const responseData = JSON.parse(graphhoperApiData);
-      let policeStationLatLong = responseData.distances;
-      let result = _.map(policeStationLatLong, _.head);
-      result.shift();
-      let min = Math.min(...result);
-      let elementIndex = result.indexOf(min) == -1 ? 0 : result.indexOf(min);
+      let policeStationLatLong = responseData.rows[0].elements.map((item) => {
+        if (item.distance) {
+          return item.distance.value;
+        } else {
+          return Infinity;
+        }
+      });
+
+      let min = Math.min(...policeStationLatLong);
+      let elementIndex =
+        policeStationLatLong.indexOf(min) == -1
+          ? 0
+          : policeStationLatLong.indexOf(min);
+      console.log(policeStationLatLong, elementIndex);
       let latitude = policeStations[elementIndex].latitude;
       let longitude = policeStations[elementIndex].longitude;
       console.log(latitude, longitude);
